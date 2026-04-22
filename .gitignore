@@ -1,0 +1,21 @@
+# .gitignore para .NET
+[Bb]in/
+[Oo]bj/
+out/
+publish/
+.vs/
+.vscode/
+*.user
+*.suo
+*.cache
+*.nupkg
+*.pdb
+[Tt]emp/
+*.log
+*.tmp
+.nuget/
+packages/
+appsettings.Development.json
+appsettings.Local.json
+*.pfx
+*.key

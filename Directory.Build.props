@@ -1,0 +1,7 @@
+<Project>
+  <PropertyGroup>
+    <UseArtifactsOutput>true</UseArtifactsOutput>
+    <!-- No usar %TEMP%: el SO puede borrar la salida y provoca FileNotFoundException en DLLs (p. ej. Swashbuckle) al ejecutar. -->
+    <ArtifactsPath>$(MSBuildThisFileDirectory).artifacts\</ArtifactsPath>
+  </PropertyGroup>
+</Project>
