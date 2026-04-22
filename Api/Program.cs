@@ -3,7 +3,6 @@ using System.Linq;
 using AutoMapper;
 using FinancieraSoluciones.Api.BackgroundJobs;
 using FinancieraSoluciones.Api.Middlewares;
-using FinancieraSoluciones.Api.Seed;
 using FinancieraSoluciones.Application.DependencyInjection;
 using FinancieraSoluciones.Application.Mapping;
 using FluentValidation;
@@ -105,11 +104,6 @@ builder.Services
 builder.Services.AddHostedService<ActualizarMoraBackgroundService>();
 
 var app = builder.Build();
-
-if (app.Environment.IsDevelopment())
-{
-    await DevelopmentSeed.SeedAsync(app.Services);
-}
 
 app.UseSwagger();
 app.UseSwaggerUI(c =>
