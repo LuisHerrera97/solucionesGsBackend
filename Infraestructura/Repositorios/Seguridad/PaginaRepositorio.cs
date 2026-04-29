@@ -66,7 +66,6 @@ namespace FinancieraSoluciones.Infraestructura.Repositorios.Seguridad
         {
             return await _context.Paginas
                 .AsNoTracking()
-                .Include(p => p.Modulo)
                 .FirstOrDefaultAsync(p => p.Id == id);
         }
 
@@ -74,7 +73,6 @@ namespace FinancieraSoluciones.Infraestructura.Repositorios.Seguridad
         {
             return await _context.Paginas
                 .AsNoTracking()
-                .Include(p => p.Modulo)
                 .FirstOrDefaultAsync(p => p.Clave == clave);
         }
 

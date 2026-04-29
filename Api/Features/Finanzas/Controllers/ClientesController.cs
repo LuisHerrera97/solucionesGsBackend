@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace FinancieraSoluciones.Api.Controllers.Finanzas
 {
     [ApiController]
-    [Route("api/finanzas/clientes")]
+    [Route("api/creditos/clientes")]
     [Authorize]
     public class ClientesController : ControllerBase
     {

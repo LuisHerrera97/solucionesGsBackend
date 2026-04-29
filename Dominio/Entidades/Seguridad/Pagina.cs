@@ -10,6 +10,7 @@ namespace FinancieraSoluciones.Domain.Entidades.Seguridad
         public string Ruta { get; set; }
         public Guid IdModulo { get; set; }
         public bool Activo { get; set; }
+        public bool EnMenu { get; set; }
         public DateTime FechaCreacion { get; set; }
         public int Orden { get; set; }
         public Modulo Modulo { get; set; }

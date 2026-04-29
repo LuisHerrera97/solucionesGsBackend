@@ -32,11 +32,6 @@ namespace FinancieraSoluciones.Infraestructura.Repositorios.Finanzas
                 {
                     query = query.Where(c => c.IdZona == zonaId.Value);
                 }
-                else
-                {
-                    // Si se debe filtrar pero no hay zona (ej. usuario no tiene zona asignada), devolver vacío
-                    query = query.Where(c => false);
-                }
             }
 
             if (!string.IsNullOrWhiteSpace(buscar))

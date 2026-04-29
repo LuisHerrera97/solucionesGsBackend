@@ -274,6 +274,10 @@ namespace FinancieraSoluciones.Infraestructura.Data
                 entity.Property(e => e.Activo)
                     .HasColumnName("activo")
                     .HasDefaultValue(true);
+
+                entity.Property(e => e.EnMenu)
+                    .HasColumnName("en_menu")
+                    .HasDefaultValue(true);
                     
                 entity.Property(e => e.FechaCreacion)
                     .HasColumnName("fecha_creacion")

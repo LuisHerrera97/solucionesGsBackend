@@ -33,7 +33,9 @@ namespace FinancieraSoluciones.Application.Mapping
                 .ForMember(d => d.ZonaCobranza, opt => opt.Ignore());
             CreateMap<Perfil, PerfilDto>().ReverseMap();
             CreateMap<Modulo, ModuloDto>().ReverseMap();
-            CreateMap<Pagina, PaginaDto>().ReverseMap();
+            CreateMap<Pagina, PaginaDto>();
+            CreateMap<PaginaDto, Pagina>()
+                .ForMember(d => d.EnMenu, opt => opt.MapFrom(s => s.EnMenu ?? true));
             CreateMap<Boton, BotonDto>().ReverseMap();
 
             CreateMap<ConfiguracionSistema, ConfiguracionSistemaDto>().ReverseMap();

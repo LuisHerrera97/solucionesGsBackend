@@ -78,13 +78,10 @@ namespace FinancieraSoluciones.Application.DependencyInjection
             services.AddScoped<ConfirmarLiquidacionCobranzaCasoUso>();
             services.AddScoped<RechazarLiquidacionCobranzaCasoUso>();
             services.AddScoped<ObtenerMovimientosPendientesLiquidacionCobradorCasoUso>();
-            services.AddScoped<ObtenerMovimientosTurnoCasoUso>();
             services.AddScoped<ObtenerMovimientosEnRangoCasoUso>();
             services.AddScoped<ObtenerResumenLiquidacionesCajaCasoUso>();
             services.AddScoped<ObtenerMovimientosPorCreditoCasoUso>();
 
-            services.AddScoped<LiquidarCobradorCajaCasoUso>();
-            services.AddScoped<RealizarCorteCasoUso>();
             services.AddScoped<MarcarMovimientosRecibidoCajaCasoUso>();
             services.AddScoped<ObtenerCortesCasoUso>();
             services.AddScoped<CondonarInteresFichaCasoUso>();

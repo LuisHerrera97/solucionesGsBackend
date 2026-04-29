@@ -907,6 +907,12 @@ namespace Infraestructura.Migrations
                         .HasColumnType("character varying(50)")
                         .HasColumnName("clave");
 
+                    b.Property<bool>("EnMenu")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("en_menu");
+
                     b.Property<DateTime>("FechaCreacion")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("fecha_creacion");

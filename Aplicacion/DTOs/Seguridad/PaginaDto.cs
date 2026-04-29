@@ -12,6 +12,8 @@ namespace FinancieraSoluciones.Application.DTOs.Seguridad
         public Guid IdModulo { get; set; }
         public string NombreModulo { get; set; }
         public bool Activo { get; set; }
+        /// <summary>Si es null en peticiones, se interpreta como true (mostrar en menú).</summary>
+        public bool? EnMenu { get; set; }
         public bool TienePermiso { get; set; }
         public DateTime FechaCreacion { get; set; }
         public int Orden { get; set; }

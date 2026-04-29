@@ -15,7 +15,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace FinancieraSoluciones.Api.Controllers.Finanzas
 {
     [ApiController]
-    [Route("api/finanzas/creditos")]
+    [Route("api/creditos/creditos")]
     [Authorize]
     public class CreditosController : ControllerBase
     {

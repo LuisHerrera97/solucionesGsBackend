@@ -50,6 +50,7 @@ namespace FinancieraSoluciones.Application.CasosUso.Seguridad
             pagina.Ruta = paginaDto.Ruta;
             pagina.IdModulo = paginaDto.IdModulo;
             pagina.Activo = paginaDto.Activo;
+            pagina.EnMenu = paginaDto.EnMenu ?? true;
             pagina.Orden = paginaDto.Orden;
 
             await _paginaRepositorio.UpdateAsync(pagina);

@@ -27,6 +27,7 @@ namespace FinancieraSoluciones.Api.Controllers.Cobranza
         private readonly RechazarLiquidacionCobranzaCasoUso _rechazarCasoUso;
         private readonly ObtenerResumenLiquidacionesCajaCasoUso _obtenerResumenCobradoresCasoUso;
         private readonly ObtenerMovimientosPendientesLiquidacionCobradorCasoUso _obtenerMovimientosPendientesCasoUso;
+        private readonly MarcarMovimientosRecibidoCajaCasoUso _marcarMovimientosRecibidoCajaCasoUso;
         private readonly IUsuarioRepositorio _usuarioRepositorio;
         private readonly IZonaCobranzaRepositorio _zonaCobranzaRepositorio;
         private readonly IPermisoBotonRepositorio _permisoBotonRepositorio;
@@ -40,6 +41,7 @@ namespace FinancieraSoluciones.Api.Controllers.Cobranza
             RechazarLiquidacionCobranzaCasoUso rechazarCasoUso,
             ObtenerResumenLiquidacionesCajaCasoUso obtenerResumenCobradoresCasoUso,
             ObtenerMovimientosPendientesLiquidacionCobradorCasoUso obtenerMovimientosPendientesCasoUso,
+            MarcarMovimientosRecibidoCajaCasoUso marcarMovimientosRecibidoCajaCasoUso,
             IUsuarioRepositorio usuarioRepositorio,
             IZonaCobranzaRepositorio zonaCobranzaRepositorio,
             IPermisoBotonRepositorio permisoBotonRepositorio)
@@ -52,6 +54,7 @@ namespace FinancieraSoluciones.Api.Controllers.Cobranza
             _rechazarCasoUso = rechazarCasoUso;
             _obtenerResumenCobradoresCasoUso = obtenerResumenCobradoresCasoUso;
             _obtenerMovimientosPendientesCasoUso = obtenerMovimientosPendientesCasoUso;
+            _marcarMovimientosRecibidoCajaCasoUso = marcarMovimientosRecibidoCajaCasoUso;
             _usuarioRepositorio = usuarioRepositorio;
             _zonaCobranzaRepositorio = zonaCobranzaRepositorio;
             _permisoBotonRepositorio = permisoBotonRepositorio;
@@ -98,6 +101,27 @@ namespace FinancieraSoluciones.Api.Controllers.Cobranza
             var dia = fecha?.Date ?? DateTime.Today;
             var result = await _obtenerMovimientosPendientesCasoUso.Ejecutar(cobradorId, dia);
             return Ok(ApiResponse<IEnumerable<MovimientoCajaDto>>.Success(result));
+        }
+
+        [HttpPost("movimientos/marcar-recibido-caja")]
+        [RequireBotonPermiso("COBRANZA_GESTION_LIQUIDACIONES_CONFIRMAR")]
+        public async Task<ActionResult<ApiResponse<object>>> MarcarRecibidoCaja([FromBody] MarcarRecibidoCajaRequestDto request)
+        {
+            var userId = CurrentUser.GetUserId(User);
+            if (!userId.HasValue)
+            {
+                return Ok(ApiResponse<object>.Fail("Usuario no autenticado", 401));
+            }
+
+            try
+            {
+                var count = await _marcarMovimientosRecibidoCajaCasoUso.Ejecutar(userId.Value, request);
+                return Ok(ApiResponse<object>.Success(new { marcados = count }));
+            }
+            catch (ArgumentException ex)
+            {
+                return Ok(ApiResponse<object>.Fail(ex.Message, 400));
+            }
         }
 
         [HttpGet("pendiente/resumen")]
