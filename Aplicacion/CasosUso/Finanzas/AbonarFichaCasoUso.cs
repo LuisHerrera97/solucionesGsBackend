@@ -49,6 +49,8 @@ namespace FinancieraSoluciones.Application.CasosUso.Finanzas
 
         public async Task<CreditoDto> Ejecutar(Guid creditoId, int numeroFicha, AbonarFichaRequestDto request, Guid? usuarioId)
         {
+            var operacionId = Guid.NewGuid();
+            var operacionKey = Guid.NewGuid().ToString("N");
             var idempotencyKey = request?.IdempotencyKey?.Trim();
             if (!string.IsNullOrWhiteSpace(idempotencyKey))
             {
@@ -94,21 +96,22 @@ namespace FinancieraSoluciones.Application.CasosUso.Finanzas
 
                 var medioPago = ParseMedioPagoCobro(request?.Medio);
 
-                ficha.AbonoAcumulado += abonoADepositar;
+                var esPagoCompleto = Math.Abs(abonoADepositar - faltanteTotal) <= DecimalTolerance.Centavo;
+                if (!esPagoCompleto)
+                {
+                    ficha.AbonoAcumulado += abonoADepositar;
+                    ficha.Total = (ficha.Capital + ficha.Interes + ficha.MoraAcumulada) - ficha.AbonoAcumulado;
+                    ficha.SaldoPendiente = ficha.Total;
+                    if (ficha.Total < 0) { ficha.Total = 0; ficha.SaldoPendiente = 0; }
+                }
 
-                ficha.Total = (ficha.Capital + ficha.Interes + ficha.MoraAcumulada) - ficha.AbonoAcumulado;
-                ficha.SaldoPendiente = ficha.Total;
-                if (ficha.Total < 0) { ficha.Total = 0; ficha.SaldoPendiente = 0; }
-
-                if (ficha.AbonoAcumulado >= (adeudoFicha - DecimalTolerance.Centavo))
+                if (esPagoCompleto || ficha.AbonoAcumulado >= (adeudoFicha - DecimalTolerance.Centavo))
                 {
                     ficha.Pagada = true;
                     ficha.FechaPago = _clock.Today;
                     ficha.Hora = _clock.Now.ToString("HH:mm");
                     ficha.Cerrada = true;
                     ficha.FechaCierre = _clock.UtcNow;
-
-                    if (ficha.AbonoAcumulado < adeudoFicha) ficha.AbonoAcumulado = adeudoFicha;
                     ficha.Total = 0;
                     ficha.SaldoPendiente = 0;
                 }
@@ -125,11 +128,13 @@ namespace FinancieraSoluciones.Application.CasosUso.Finanzas
                 var (montoEfectivo, montoTransferencia) = ResolverMontosPorMedio(medioPago, totalCobrado, request);
 
                 var medioStored = medioPago.ToStoredString();
-                var concepto = ficha.Pagada ? $"Pago Ficha #{numeroFicha}" : $"Abono Ficha #{numeroFicha}";
+                var conceptoBase = esPagoCompleto ? $"Pago Ficha #{numeroFicha}" : $"Abono Ficha #{numeroFicha}";
+                var concepto = $"{conceptoBase} [OP:{operacionKey}]";
 
                 var movimiento = new MovimientoCaja
                 {
                     Id = Guid.NewGuid(),
+                    OperacionId = operacionId,
                     IdempotencyKey = idempotencyKey,
                     Tipo = TipoMovimientoCaja.Ficha.ToStoredString(),
                     Concepto = concepto,
@@ -137,7 +142,7 @@ namespace FinancieraSoluciones.Application.CasosUso.Finanzas
                     Total = totalCobrado,
                     MontoEfectivo = montoEfectivo,
                     MontoTransferencia = montoTransferencia,
-                    Abono = abonoADepositar,
+                    Abono = esPagoCompleto ? 0m : abonoADepositar,
                     Mora = 0,
                     CreditoId = credito.Id,
                     NumeroFicha = numeroFicha,
@@ -158,6 +163,142 @@ namespace FinancieraSoluciones.Application.CasosUso.Finanzas
                     EntidadId = credito.Id,
                     Fecha = _clock.UtcNow,
                     Detalle = $"Ficha:{numeroFicha};Total:{totalCobrado};Medio:{medioStored};Concepto:{concepto}"
+                });
+
+                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.CommitTransactionAsync();
+
+                return MapCreditoConFichasOrdenadas(credito);
+            }
+            catch
+            {
+                await _unitOfWork.RollbackTransactionAsync();
+                throw;
+            }
+        }
+
+        public async Task<CreditoDto> EjecutarMultiplesVigentes(Guid creditoId, AbonarFichaRequestDto request, Guid? usuarioId)
+        {
+            var operacionId = Guid.NewGuid();
+            var operacionKey = Guid.NewGuid().ToString("N");
+            var cantidadFichas = request?.CantidadFichas ?? 0;
+            if (cantidadFichas <= 0) throw new BusinessRuleException("La cantidad de fichas debe ser mayor a 0");
+
+            await _unitOfWork.BeginTransactionAsync();
+            try
+            {
+                var credito = await _creditoRepositorio.GetByIdAsync(creditoId);
+                if (credito == null) throw new NotFoundException("No existe el crédito");
+
+                await _creditoZonaAutorizacionService.AsegurarPuedeOperarAsync(credito, usuarioId);
+
+                var hoy = _clock.Today.Date;
+                var fichasVigentes = (credito.Fichas ?? Enumerable.Empty<Ficha>())
+                    .Where(f => !f.Pagada)
+                    .OrderBy(f => f.Fecha.Date < hoy ? 1 : 0)
+                    .ThenBy(f => f.Num)
+                    .ToList();
+
+                if (!fichasVigentes.Any()) throw new BusinessRuleException("El crédito no tiene fichas vigentes");
+                if (cantidadFichas > fichasVigentes.Count)
+                    throw new BusinessRuleException("La cantidad de fichas excede las vigentes");
+
+                var fichasAPagar = fichasVigentes.Take(cantidadFichas).ToList();
+                var totalAPagar = fichasAPagar.Sum(f => Math.Max(0, (f.Capital + f.Interes + f.MoraAcumulada) - f.AbonoAcumulado));
+                if (totalAPagar <= 0) throw new BusinessRuleException("No hay saldo pendiente en las fichas seleccionadas");
+
+                var montoTotalRecibido = request?.MontoAbono ?? totalAPagar;
+                if (montoTotalRecibido <= 0) throw new BusinessRuleException("El monto debe ser mayor a 0");
+                if (Math.Abs(montoTotalRecibido - totalAPagar) > DecimalTolerance.Centavo)
+                    throw new BusinessRuleException("El monto debe coincidir con el total a pagar de las fichas vigentes");
+
+                var medioPago = ParseMedioPagoCobro(request?.Medio);
+                var (montoEfectivoTotal, montoTransferenciaTotal) = ResolverMontosPorMedio(medioPago, montoTotalRecibido, request);
+                var medioStored = medioPago.ToStoredString();
+
+                var restanteEfectivo = montoEfectivoTotal ?? 0m;
+                var restanteTransferencia = montoTransferenciaTotal ?? 0m;
+
+                for (var i = 0; i < fichasAPagar.Count; i++)
+                {
+                    var ficha = fichasAPagar[i];
+                    var adeudoFicha = Math.Max(0, (ficha.Capital + ficha.Interes + ficha.MoraAcumulada) - ficha.AbonoAcumulado);
+                    if (adeudoFicha <= 0) continue;
+
+                    ficha.Total = 0;
+                    ficha.SaldoPendiente = 0;
+                    ficha.Pagada = true;
+                    ficha.FechaPago = _clock.Today;
+                    ficha.Hora = _clock.Now.ToString("HH:mm");
+                    ficha.Cerrada = true;
+                    ficha.FechaCierre = _clock.UtcNow;
+
+                    decimal movimientoEf;
+                    decimal movimientoTr;
+                    if (i == fichasAPagar.Count - 1)
+                    {
+                        movimientoEf = restanteEfectivo;
+                        movimientoTr = restanteTransferencia;
+                    }
+                    else if (medioPago == MedioMovimientoCaja.Efectivo)
+                    {
+                        movimientoEf = adeudoFicha;
+                        movimientoTr = 0m;
+                    }
+                    else if (medioPago == MedioMovimientoCaja.Transferencia)
+                    {
+                        movimientoEf = 0m;
+                        movimientoTr = adeudoFicha;
+                    }
+                    else
+                    {
+                        var proporcion = adeudoFicha / montoTotalRecibido;
+                        movimientoEf = Math.Round((montoEfectivoTotal ?? 0m) * proporcion, 2, MidpointRounding.AwayFromZero);
+                        movimientoTr = adeudoFicha - movimientoEf;
+                    }
+
+                    restanteEfectivo -= movimientoEf;
+                    restanteTransferencia -= movimientoTr;
+
+                    await _movimientoCajaRepositorio.AddAsync(new MovimientoCaja
+                    {
+                        Id = Guid.NewGuid(),
+                        OperacionId = operacionId,
+                        IdempotencyKey = i == 0 ? request?.IdempotencyKey?.Trim() : null,
+                        Tipo = TipoMovimientoCaja.Ficha.ToStoredString(),
+                        Concepto = $"Pago Ficha #{ficha.Num} [OP:{operacionKey}]",
+                        Medio = medioStored,
+                        Total = adeudoFicha,
+                        MontoEfectivo = movimientoEf,
+                        MontoTransferencia = movimientoTr,
+                        Abono = 0m,
+                        Mora = 0,
+                        CreditoId = credito.Id,
+                        NumeroFicha = ficha.Num,
+                        Fecha = _clock.Today,
+                        Hora = _clock.Now.ToString("HH:mm"),
+                        CobradorId = usuarioId,
+                        RegistraCaja = true
+                    });
+                }
+
+                credito.Pagado += montoTotalRecibido;
+                if (credito.Fichas.All(f => f.Pagada))
+                {
+                    credito.Estatus = EstatusCredito.Liquidado.ToStoredString();
+                }
+
+                await _creditoRepositorio.UpdateAsync(credito);
+
+                await _auditoriaRepositorio.AddAsync(new Domain.Entidades.General.AuditoriaEvento
+                {
+                    Id = Guid.NewGuid(),
+                    UsuarioId = usuarioId,
+                    Accion = "CobroFichasVigentes",
+                    EntidadTipo = "Credito",
+                    EntidadId = credito.Id,
+                    Fecha = _clock.UtcNow,
+                    Detalle = $"Cantidad:{cantidadFichas};Total:{montoTotalRecibido};Medio:{medioStored}"
                 });
 
                 await _unitOfWork.SaveChangesAsync();

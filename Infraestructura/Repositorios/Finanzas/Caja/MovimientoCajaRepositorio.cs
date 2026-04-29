@@ -42,7 +42,9 @@ namespace FinancieraSoluciones.Infraestructura.Repositorios.Finanzas.Caja
             int? page = null,
             int? pageSize = null,
             Guid? cobradorId = null,
-            Guid? zonaId = null)
+            Guid? zonaId = null,
+            string? creditoFolio = null,
+            string? clienteNombre = null)
         {
             var desde = fechaDesde.Date;
             var hasta = fechaHasta.Date;
@@ -51,6 +53,8 @@ namespace FinancieraSoluciones.Infraestructura.Repositorios.Finanzas.Caja
 
             var query = _context.MovimientosCaja
                 .AsNoTracking()
+                .Include(m => m.Credito)
+                    .ThenInclude(c => c.Cliente)
                 .Where(m => m.RegistraCaja && m.Fecha >= desde && m.Fecha < hastaExclusive)
                 .OrderBy(m => m.Fecha)
                 .ThenBy(m => m.Hora)
@@ -68,6 +72,25 @@ namespace FinancieraSoluciones.Infraestructura.Repositorios.Finanzas.Caja
                     .Where(u => u.IdZonaCobranza == zonaId.Value)
                     .Select(u => u.Id);
                 query = query.Where(m => m.CobradorId.HasValue && cobradoresZona.Contains(m.CobradorId.Value));
+            }
+
+            if (!string.IsNullOrWhiteSpace(creditoFolio))
+            {
+                var folio = creditoFolio.Trim();
+                query = query.Where(m => m.Credito != null && EF.Functions.ILike(m.Credito.Folio, $"%{folio}%"));
+            }
+
+            if (!string.IsNullOrWhiteSpace(clienteNombre))
+            {
+                var cliente = clienteNombre.Trim();
+                query = query.Where(m =>
+                    m.Credito != null &&
+                    m.Credito.Cliente != null &&
+                    (
+                        EF.Functions.ILike(m.Credito.Cliente.Nombre, $"%{cliente}%") ||
+                        EF.Functions.ILike(m.Credito.Cliente.Apellido, $"%{cliente}%") ||
+                        EF.Functions.ILike(m.Credito.Cliente.Nombre + " " + m.Credito.Cliente.Apellido, $"%{cliente}%")
+                    ));
             }
 
             if (page.HasValue || pageSize.HasValue)
@@ -196,9 +219,31 @@ namespace FinancieraSoluciones.Infraestructura.Repositorios.Finanzas.Caja
         {
             return await _context.MovimientosCaja
                 .AsNoTracking()
+                .Include(m => m.Credito)
+                    .ThenInclude(c => c.Cliente)
                 .Where(m => m.CreditoId == creditoId)
                 .OrderByDescending(m => m.Fecha)
                 .ThenByDescending(m => m.Hora)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<MovimientoCaja>> ObtenerPorOperacionAsync(Guid creditoId, Guid? operacionId, string? operacionKey = null)
+        {
+            if (!operacionId.HasValue && string.IsNullOrWhiteSpace(operacionKey))
+            {
+                return Array.Empty<MovimientoCaja>();
+            }
+
+            var token = string.IsNullOrWhiteSpace(operacionKey) ? null : $"[OP:{operacionKey.Trim()}]";
+            return await _context.MovimientosCaja
+                .Where(m =>
+                    m.CreditoId == creditoId &&
+                    (
+                        (operacionId.HasValue && m.OperacionId == operacionId.Value) ||
+                        (token != null && m.Concepto.Contains(token))
+                    ))
+                .OrderBy(m => m.Fecha)
+                .ThenBy(m => m.Hora)
                 .ToListAsync();
         }
 

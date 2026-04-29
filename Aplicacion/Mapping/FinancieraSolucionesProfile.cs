@@ -49,6 +49,8 @@ namespace FinancieraSoluciones.Application.Mapping
 
             CreateMap<Ficha, FichaDto>()
                 .ForMember(d => d.Hora, opt => opt.MapFrom(s => s.Hora ?? string.Empty))
+                .ForMember(d => d.Total, opt => opt.MapFrom(s => s.Total))
+                .ForMember(d => d.Aplicado, opt => opt.MapFrom(s => s.Pagada))
                 .ReverseMap();
 
             CreateMap<Credito, CreditoDto>()
@@ -71,6 +73,11 @@ namespace FinancieraSoluciones.Application.Mapping
 
             CreateMap<MovimientoCaja, MovimientoCajaDto>()
                 .ForMember(d => d.Hora, opt => opt.MapFrom(s => s.Hora ?? string.Empty))
+                .ForMember(d => d.CreditoFolio, opt => opt.MapFrom(s => s.Credito != null ? s.Credito.Folio : null))
+                .ForMember(d => d.ClienteNombre, opt => opt.MapFrom(s =>
+                    s.Credito != null && s.Credito.Cliente != null
+                        ? string.Concat(s.Credito.Cliente.Nombre, " ", s.Credito.Cliente.Apellido)
+                        : null))
                 .ReverseMap();
 
             CreateMap<MovimientoCobranza, MovimientoCobranzaDto>().ReverseMap();

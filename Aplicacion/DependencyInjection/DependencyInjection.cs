@@ -79,6 +79,7 @@ namespace FinancieraSoluciones.Application.DependencyInjection
             services.AddScoped<CondonarInteresMontoCasoUso>();
             services.AddScoped<ActualizarObservacionCasoUso>();
             services.AddScoped<PenalizarFichaManualCasoUso>();
+            services.AddScoped<ReversarOperacionMovimientoCasoUso>();
             services.AddScoped<ICreditoZonaAutorizacionService, CreditoZonaAutorizacionService>();
             return services;
         }

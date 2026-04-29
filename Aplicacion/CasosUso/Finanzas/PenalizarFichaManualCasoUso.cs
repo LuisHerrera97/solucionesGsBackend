@@ -45,6 +45,8 @@ namespace FinancieraSoluciones.Application.CasosUso.Finanzas
 
         public async Task<CreditoDto> Ejecutar(Guid creditoId, int numeroFicha, PenalizarFichaRequestDto request, Guid? usuarioId)
         {
+            var operacionId = Guid.NewGuid();
+            var operacionKey = Guid.NewGuid().ToString("N");
             await _unitOfWork.BeginTransactionAsync();
             try
             {
@@ -71,9 +73,10 @@ namespace FinancieraSoluciones.Application.CasosUso.Finanzas
                 var movimiento = new MovimientoCaja
                 {
                     Id = Guid.NewGuid(),
+                    OperacionId = operacionId,
                     IdempotencyKey = request.IdempotencyKey,
                     Tipo = TipoMovimientoCaja.Penalizacion.ToStoredString(),
-                    Concepto = $"Cargo por Penalización Manual (Ficha #{numeroFicha})",
+                    Concepto = $"Multa aplicada Ficha #{numeroFicha} [OP:{operacionKey}]",
                     Medio = MedioMovimientoCaja.Ajuste.ToStoredString(),
                     Total = 0,
                     Abono = 0,
@@ -83,7 +86,7 @@ namespace FinancieraSoluciones.Application.CasosUso.Finanzas
                     Fecha = _clock.Today,
                     Hora = _clock.Now.ToString("HH:mm"),
                     CobradorId = usuarioId,
-                    RegistraCaja = true
+                    RegistraCaja = false
                 };
 
                 await _movimientoCajaRepositorio.AddAsync(movimiento);

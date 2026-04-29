@@ -21,8 +21,18 @@ namespace FinancieraSoluciones.Application.CasosUso.Finanzas.Caja
 
         public async Task<IEnumerable<MovimientoCajaDto>> Ejecutar(Guid creditoId)
         {
-            var movimientos = await _movimientoRepositorio.ObtenerPorCreditoAsync(creditoId);
-            return movimientos.Select(m => _mapper.Map<MovimientoCajaDto>(m));
+            var movimientos = (await _movimientoRepositorio.ObtenerPorCreditoAsync(creditoId)).ToList();
+            var revertidosIds = movimientos
+                .Where(m => m.ReversaDeId.HasValue)
+                .Select(m => m.ReversaDeId!.Value)
+                .ToHashSet();
+
+            return movimientos.Select(m =>
+            {
+                var dto = _mapper.Map<MovimientoCajaDto>(m);
+                dto.Revertido = revertidosIds.Contains(m.Id);
+                return dto;
+            });
         }
     }
 }

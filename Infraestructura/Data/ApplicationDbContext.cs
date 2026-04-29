@@ -885,6 +885,9 @@ namespace FinancieraSoluciones.Infraestructura.Data
                 entity.Property(e => e.ReversaDeId)
                     .HasColumnName("reversa_de_id");
 
+                entity.Property(e => e.OperacionId)
+                    .HasColumnName("operacion_id");
+
                 entity.Property(e => e.IdempotencyKey)
                     .HasColumnName("idempotency_key")
                     .HasMaxLength(120)
@@ -951,6 +954,8 @@ namespace FinancieraSoluciones.Infraestructura.Data
                 entity.HasIndex(e => e.CobradorId);
 
                 entity.HasIndex(e => e.ReversaDeId);
+
+                entity.HasIndex(e => e.OperacionId);
 
                 entity.HasIndex(e => e.IdempotencyKey)
                     .IsUnique();

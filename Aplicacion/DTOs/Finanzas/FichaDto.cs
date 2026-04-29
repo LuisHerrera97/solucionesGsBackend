@@ -17,5 +17,6 @@ namespace FinancieraSoluciones.Application.DTOs.Finanzas
         public decimal SaldoCap { get; set; }
         public decimal SaldoPendiente { get; set; }
         public bool Pagada { get; set; }
+        public bool Aplicado { get; set; }
     }
 }

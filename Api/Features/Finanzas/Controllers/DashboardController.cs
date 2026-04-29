@@ -67,7 +67,9 @@ namespace FinancieraSoluciones.Api.Controllers.Finanzas
             [FromQuery] int? page = null,
             [FromQuery] int? pageSize = null,
             [FromQuery] Guid? zonaId = null,
-            [FromQuery] Guid? cobradorId = null)
+            [FromQuery] Guid? cobradorId = null,
+            [FromQuery] string? creditoFolio = null,
+            [FromQuery] string? clienteNombre = null)
         {
             var desde = fechaDesde?.Date ?? DateTime.Today;
             var hasta = fechaHasta?.Date ?? DateTime.Today;
@@ -90,8 +92,48 @@ namespace FinancieraSoluciones.Api.Controllers.Finanzas
                 page,
                 pageSize,
                 cobradorId,
-                zonaRes.AplicarFiltroZona ? zonaRes.ZonaId : null);
+                zonaRes.AplicarFiltroZona ? zonaRes.ZonaId : null,
+                creditoFolio,
+                clienteNombre);
             return Ok(ApiResponse<IEnumerable<MovimientoCajaDto>>.Success(result));
+        }
+
+        [HttpGet("movimientos-cobranza")]
+        public async Task<ActionResult<ApiResponse<IEnumerable<MovimientoCajaCobranzaDto>>>> ObtenerMovimientosCobranza(
+            [FromQuery] DateTime? fechaDesde = null,
+            [FromQuery] DateTime? fechaHasta = null,
+            [FromQuery] int? page = null,
+            [FromQuery] int? pageSize = null,
+            [FromQuery] Guid? zonaId = null,
+            [FromQuery] Guid? cobradorId = null,
+            [FromQuery] string? creditoFolio = null,
+            [FromQuery] string? clienteNombre = null)
+        {
+            var desde = fechaDesde?.Date ?? DateTime.Today;
+            var hasta = fechaHasta?.Date ?? DateTime.Today;
+            var userId = CurrentUser.GetUserId(User);
+            var zonaRes = await CobranzaZonaFiltroResolver.ResolverAsync(
+                userId,
+                zonaId,
+                _usuarioRepositorio,
+                _zonaCobranzaRepositorio,
+                _permisoBotonRepositorio);
+
+            if (zonaRes.TieneError)
+            {
+                return Ok(ApiResponse<IEnumerable<MovimientoCajaCobranzaDto>>.Fail(zonaRes.MensajeError ?? string.Empty, zonaRes.CodigoError));
+            }
+
+            var result = await _obtenerMovimientosEnRangoCasoUso.EjecutarParaCobranza(
+                desde,
+                hasta,
+                page,
+                pageSize,
+                cobradorId,
+                zonaRes.AplicarFiltroZona ? zonaRes.ZonaId : null,
+                creditoFolio,
+                clienteNombre);
+            return Ok(ApiResponse<IEnumerable<MovimientoCajaCobranzaDto>>.Success(result));
         }
     }
 }

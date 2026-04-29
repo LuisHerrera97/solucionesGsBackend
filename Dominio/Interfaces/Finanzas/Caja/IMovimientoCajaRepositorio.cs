@@ -14,7 +14,9 @@ namespace FinancieraSoluciones.Domain.Interfaces.Finanzas.Caja
             int? page = null,
             int? pageSize = null,
             Guid? cobradorId = null,
-            Guid? zonaId = null);
+            Guid? zonaId = null,
+            string? creditoFolio = null,
+            string? clienteNombre = null);
         Task<IEnumerable<MovimientoCaja>> ObtenerPendientesLiquidacionAsync(Guid cobradorId, DateTime fecha);
         Task<MovimientoCaja> AddAsync(MovimientoCaja movimiento);
         Task<MovimientoCaja> GetByIdAsync(Guid id);
@@ -25,6 +27,7 @@ namespace FinancieraSoluciones.Domain.Interfaces.Finanzas.Caja
         Task<int> AsignarLiquidacionAsync(Guid liquidacionId, Guid cobradorId, DateTime fecha);
         Task<int> DesvincularLiquidacionAsync(Guid liquidacionId);
         Task<IEnumerable<MovimientoCaja>> ObtenerPorCreditoAsync(Guid creditoId);
+        Task<IEnumerable<MovimientoCaja>> ObtenerPorOperacionAsync(Guid creditoId, Guid? operacionId, string? operacionKey = null);
         Task<int> MarcarRecibidoCajaAsync(IEnumerable<Guid> movimientoIds, DateTime fechaDia);
     }
 }

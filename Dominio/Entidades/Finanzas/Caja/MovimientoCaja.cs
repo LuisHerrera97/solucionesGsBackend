@@ -15,6 +15,7 @@ namespace FinancieraSoluciones.Domain.Entidades.Finanzas.Caja
         /// </summary>
         public bool RecibidoCaja { get; set; }
         public Guid? ReversaDeId { get; set; }
+        public Guid? OperacionId { get; set; }
         public string? IdempotencyKey { get; set; }
         public string Tipo { get; set; }
         public string Concepto { get; set; }

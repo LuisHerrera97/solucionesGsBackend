@@ -17,6 +17,11 @@ namespace FinancieraSoluciones.Application.Validaciones.Finanzas
                 .When(x => x.MontoAbono.HasValue)
                 .WithMessage("El monto debe ser mayor a 0.");
 
+            RuleFor(x => x.CantidadFichas)
+                .GreaterThan(0)
+                .When(x => x.CantidadFichas.HasValue)
+                .WithMessage("La cantidad de fichas debe ser mayor a 0.");
+
             RuleFor(x => x)
                 .Must(x => x.MontoEfectivo is null || x.MontoEfectivo >= 0m)
                 .WithMessage("Montos de pago inválidos.");
