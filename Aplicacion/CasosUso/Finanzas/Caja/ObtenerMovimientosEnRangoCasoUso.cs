@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using AutoMapper;
 using FinancieraSoluciones.Application.DTOs.Finanzas.Caja;
 using FinancieraSoluciones.Application.Finanzas.Caja;
-using FinancieraSoluciones.Domain.Interfaces.Cobranza.Liquidaciones;
 using FinancieraSoluciones.Domain.Interfaces.Finanzas.Caja;
 
 namespace FinancieraSoluciones.Application.CasosUso.Finanzas.Caja
@@ -13,16 +12,13 @@ namespace FinancieraSoluciones.Application.CasosUso.Finanzas.Caja
     {
         private readonly IMapper _mapper;
         private readonly IMovimientoCajaRepositorio _movimientoRepositorio;
-        private readonly ILiquidacionCobranzaRepositorio _liquidacionRepositorio;
 
         public ObtenerMovimientosEnRangoCasoUso(
             IMapper mapper,
-            IMovimientoCajaRepositorio movimientoRepositorio,
-            ILiquidacionCobranzaRepositorio liquidacionRepositorio)
+            IMovimientoCajaRepositorio movimientoRepositorio)
         {
             _mapper = mapper;
             _movimientoRepositorio = movimientoRepositorio;
-            _liquidacionRepositorio = liquidacionRepositorio;
         }
 
         public async Task<IEnumerable<MovimientoCajaDto>> Ejecutar(
@@ -34,17 +30,11 @@ namespace FinancieraSoluciones.Application.CasosUso.Finanzas.Caja
             Guid? zonaId = null)
         {
             var movimientos = (await _movimientoRepositorio.ObtenerEnRangoAsync(fechaDesde, fechaHasta, page, pageSize, cobradorId, zonaId)).ToList();
-            var liqIds = movimientos
-                .Where(m => m.LiquidacionCobranzaId.HasValue)
-                .Select(m => m.LiquidacionCobranzaId!.Value)
-                .Distinct()
-                .ToArray();
-            var estDict = await _liquidacionRepositorio.GetEstatusPorIdsAsync(liqIds);
 
             return movimientos.Select(m =>
             {
                 var dto = _mapper.Map<MovimientoCajaDto>(m);
-                dto.EstatusFichaFinanzas = MovimientoCajaEstatusFinanzasHelper.CalcularEstatusFichaFinanzas(m, estDict);
+                dto.EstatusFichaFinanzas = MovimientoCajaEstatusFinanzasHelper.CalcularEstatusFichaFinanzas(m, null);
                 return dto;
             });
         }

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using FinancieraSoluciones.Domain.Entidades.Finanzas.Caja;
-using FinancieraSoluciones.Domain.Enums.Cobranza.Liquidaciones;
 using FinancieraSoluciones.Domain.Enums.Finanzas.Caja;
 
 namespace FinancieraSoluciones.Application.Finanzas.Caja
@@ -33,17 +32,6 @@ namespace FinancieraSoluciones.Application.Finanzas.Caja
                 return "COBRADO";
             }
 
-            if (m.LiquidacionCobranzaId.HasValue && estatusLiquidacionPorId != null &&
-                estatusLiquidacionPorId.TryGetValue(m.LiquidacionCobranzaId.Value, out var est))
-            {
-                if (EstatusLiquidacionCobranzaExtensions.EqualsStored(est, EstatusLiquidacionCobranza.Confirmada))
-                {
-                    return "COBRADO";
-                }
-
-                return "ENVIADA";
-            }
-
             return "PENDIENTE";
         }
 
@@ -56,13 +44,7 @@ namespace FinancieraSoluciones.Application.Finanzas.Caja
                 return true;
             }
 
-            if (!m.LiquidacionCobranzaId.HasValue)
-            {
-                return false;
-            }
-
-            return estatusLiquidacionPorId.TryGetValue(m.LiquidacionCobranzaId.Value, out var est) &&
-                   EstatusLiquidacionCobranzaExtensions.EqualsStored(est, EstatusLiquidacionCobranza.Confirmada);
+            return false;
         }
     }
 }

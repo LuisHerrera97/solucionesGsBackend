@@ -4,7 +4,6 @@ using FinancieraSoluciones.Application.CasosUso.Finanzas.Caja;
 using FinancieraSoluciones.Application.CasosUso.Finanzas.Cortes;
 using FinancieraSoluciones.Application.CasosUso.Cobranza.Pendientes;
 using FinancieraSoluciones.Application.CasosUso.Cobranza.Cobranza;
-using FinancieraSoluciones.Application.CasosUso.Cobranza.Liquidaciones;
 using FinancieraSoluciones.Application.CasosUso.Seguridad;
 using FinancieraSoluciones.Application.Servicios.Finanzas;
 using Microsoft.Extensions.DependencyInjection;
@@ -71,15 +70,7 @@ namespace FinancieraSoluciones.Application.DependencyInjection
             services.AddScoped<ReestructurarCreditoCasoUso>();
             services.AddScoped<ObtenerPendientesCasoUso>();
             services.AddScoped<ObtenerCobranzaCasoUso>();
-            services.AddScoped<ObtenerResumenLiquidacionPendienteCasoUso>();
-            services.AddScoped<CrearLiquidacionCobranzaCasoUso>();
-            services.AddScoped<ObtenerLiquidacionesCobradorCasoUso>();
-            services.AddScoped<ObtenerTodasLiquidacionesCasoUso>();
-            services.AddScoped<ConfirmarLiquidacionCobranzaCasoUso>();
-            services.AddScoped<RechazarLiquidacionCobranzaCasoUso>();
-            services.AddScoped<ObtenerMovimientosPendientesLiquidacionCobradorCasoUso>();
             services.AddScoped<ObtenerMovimientosEnRangoCasoUso>();
-            services.AddScoped<ObtenerResumenLiquidacionesCajaCasoUso>();
             services.AddScoped<ObtenerMovimientosPorCreditoCasoUso>();
 
             services.AddScoped<MarcarMovimientosRecibidoCajaCasoUso>();

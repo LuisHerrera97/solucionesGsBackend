@@ -10,7 +10,6 @@ namespace FinancieraSoluciones.Domain.Entidades.Finanzas.Caja
         public Guid? CorteCajaId { get; set; }
         public CorteCaja CorteCaja { get; set; }
         public Guid? CobradorId { get; set; }
-        public Guid? LiquidacionCobranzaId { get; set; }
         /// <summary>
         /// Caja confirmó recepción del efectivo/medios (pendiente → cobrado). Excluye liquidación enviada sin confirmar.
         /// </summary>

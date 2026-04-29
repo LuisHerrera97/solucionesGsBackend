@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using FinancieraSoluciones.Domain.Entidades.Finanzas.Caja;
-using FinancieraSoluciones.Domain.Enums.Cobranza.Liquidaciones;
 using FinancieraSoluciones.Domain.Enums.Finanzas.Caja;
 using FinancieraSoluciones.Domain.Interfaces.Finanzas.Caja;
 using FinancieraSoluciones.Infraestructura.Data;
@@ -24,8 +23,6 @@ namespace FinancieraSoluciones.Infraestructura.Repositorios.Finanzas.Caja
         {
             var desde = (fechaDia ?? DateTime.Today).Date;
             var hasta = desde.AddDays(1);
-            var confirmada = EstatusLiquidacionCobranza.Confirmada.ToStoredString();
-            var tipoEntrada = TipoMovimientoCaja.Entrada.ToStoredString();
             return await _context.MovimientosCaja
                 .AsNoTracking()
                 .Where(m =>
@@ -33,11 +30,7 @@ namespace FinancieraSoluciones.Infraestructura.Repositorios.Finanzas.Caja
                     m.CorteCajaId == null &&
                     m.Fecha >= desde &&
                     m.Fecha < hasta &&
-                    !(m.Tipo == tipoEntrada && m.LiquidacionCobranzaId != null) &&
-                    (m.CobradorId == null ||
-                     m.RecibidoCaja ||
-                     (m.LiquidacionCobranzaId != null &&
-                      _context.LiquidacionesCobranza.Any(l => l.Id == m.LiquidacionCobranzaId && l.Estatus == confirmada))))
+                    (m.CobradorId == null || m.RecibidoCaja))
                 .OrderBy(m => m.Fecha)
                 .ThenBy(m => m.Hora)
                 .ToListAsync();
@@ -104,7 +97,6 @@ namespace FinancieraSoluciones.Infraestructura.Repositorios.Finanzas.Caja
                 .Where(m =>
                     m.RegistraCaja &&
                     m.CobradorId == cobradorId &&
-                    m.LiquidacionCobranzaId == null &&
                     m.CorteCajaId == null &&
                     m.Fecha >= desde &&
                     m.Fecha < hasta &&
@@ -139,8 +131,6 @@ namespace FinancieraSoluciones.Infraestructura.Repositorios.Finanzas.Caja
         {
             var desde = fecha.Date;
             var hasta = desde.AddDays(1);
-            var confirmada = EstatusLiquidacionCobranza.Confirmada.ToStoredString();
-            var tipoEntrada = TipoMovimientoCaja.Entrada.ToStoredString();
             return await _context.MovimientosCaja
                 .AsNoTracking()
                 .AnyAsync(m =>
@@ -148,11 +138,7 @@ namespace FinancieraSoluciones.Infraestructura.Repositorios.Finanzas.Caja
                     m.CorteCajaId == null &&
                     m.Fecha >= desde &&
                     m.Fecha < hasta &&
-                    !(m.Tipo == tipoEntrada && m.LiquidacionCobranzaId != null) &&
-                    (m.CobradorId == null ||
-                     m.RecibidoCaja ||
-                     (m.LiquidacionCobranzaId != null &&
-                      _context.LiquidacionesCobranza.Any(l => l.Id == m.LiquidacionCobranzaId && l.Estatus == confirmada))));
+                    (m.CobradorId == null || m.RecibidoCaja));
         }
 
         public async Task<bool> TienePendientesLiquidacionAsync(DateTime fecha)
@@ -166,7 +152,6 @@ namespace FinancieraSoluciones.Infraestructura.Repositorios.Finanzas.Caja
                 .AnyAsync(m =>
                     m.RegistraCaja &&
                     m.CobradorId != null &&
-                    m.LiquidacionCobranzaId == null &&
                     m.CorteCajaId == null &&
                     m.Fecha >= desde &&
                     m.Fecha < hasta &&
@@ -177,19 +162,13 @@ namespace FinancieraSoluciones.Infraestructura.Repositorios.Finanzas.Caja
         {
             var desde = fechaCorte.Date;
             var hasta = desde.AddDays(1);
-            var confirmada = EstatusLiquidacionCobranza.Confirmada.ToStoredString();
-            var tipoEntrada = TipoMovimientoCaja.Entrada.ToStoredString();
             var movimientos = await _context.MovimientosCaja
                 .Where(m =>
                     m.RegistraCaja &&
                     m.CorteCajaId == null &&
                     m.Fecha >= desde &&
                     m.Fecha < hasta &&
-                    !(m.Tipo == tipoEntrada && m.LiquidacionCobranzaId != null) &&
-                    (m.CobradorId == null ||
-                     m.RecibidoCaja ||
-                     (m.LiquidacionCobranzaId != null &&
-                      _context.LiquidacionesCobranza.Any(l => l.Id == m.LiquidacionCobranzaId && l.Estatus == confirmada))))
+                    (m.CobradorId == null || m.RecibidoCaja))
                 .ToListAsync();
 
             foreach (var m in movimientos)
@@ -203,43 +182,14 @@ namespace FinancieraSoluciones.Infraestructura.Repositorios.Finanzas.Caja
 
         public async Task<int> AsignarLiquidacionAsync(Guid liquidacionId, Guid cobradorId, DateTime fecha)
         {
-            var desde = fecha.Date;
-            var hasta = desde.AddDays(1);
-            var tipoFicha = TipoMovimientoCaja.Ficha.ToStoredString();
-            var tipoIngreso = TipoMovimientoCaja.Ingreso.ToStoredString();
-            var movimientos = await _context.MovimientosCaja
-                .Where(m =>
-                    m.RegistraCaja &&
-                    m.CobradorId == cobradorId &&
-                    m.LiquidacionCobranzaId == null &&
-                    m.CorteCajaId == null &&
-                    m.Fecha >= desde &&
-                    m.Fecha < hasta &&
-                    (m.Tipo == tipoFicha || m.Tipo == tipoIngreso))
-                .ToListAsync();
-
-            foreach (var m in movimientos)
-            {
-                m.LiquidacionCobranzaId = liquidacionId;
-            }
-
             await Task.CompletedTask;
-            return movimientos.Count;
+            return 0;
         }
 
         public async Task<int> DesvincularLiquidacionAsync(Guid liquidacionId)
         {
-            var movimientos = await _context.MovimientosCaja
-                .Where(m => m.LiquidacionCobranzaId == liquidacionId)
-                .ToListAsync();
-
-            foreach (var m in movimientos)
-            {
-                m.LiquidacionCobranzaId = null;
-            }
-
             await Task.CompletedTask;
-            return movimientos.Count;
+            return 0;
         }
 
         public async Task<IEnumerable<MovimientoCaja>> ObtenerPorCreditoAsync(Guid creditoId)
@@ -269,7 +219,6 @@ namespace FinancieraSoluciones.Infraestructura.Repositorios.Finanzas.Caja
                     idList.Contains(m.Id) &&
                     m.RegistraCaja &&
                     m.CobradorId != null &&
-                    m.LiquidacionCobranzaId == null &&
                     !m.RecibidoCaja &&
                     m.CorteCajaId == null &&
                     m.Fecha >= desde &&

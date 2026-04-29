@@ -1,6 +1,5 @@
 using AutoMapper;
 using FinancieraSoluciones.Application.DTOs.Cobranza.Cobranza;
-using FinancieraSoluciones.Application.DTOs.Cobranza.Liquidaciones;
 using FinancieraSoluciones.Application.DTOs.Cobranza.Pendientes;
 using FinancieraSoluciones.Application.DTOs.Finanzas;
 using FinancieraSoluciones.Application.DTOs.Finanzas.Caja;
@@ -8,7 +7,6 @@ using FinancieraSoluciones.Application.DTOs.Finanzas.Cortes;
 using FinancieraSoluciones.Application.DTOs.General;
 using FinancieraSoluciones.Application.DTOs.Seguridad;
 using FinancieraSoluciones.Domain.Entidades.Cobranza.Cobranza;
-using FinancieraSoluciones.Domain.Entidades.Cobranza.Liquidaciones;
 using FinancieraSoluciones.Domain.Entidades.Cobranza.Pendientes;
 using FinancieraSoluciones.Domain.Entidades.Finanzas;
 using FinancieraSoluciones.Domain.Entidades.Finanzas.Caja;
@@ -77,9 +75,6 @@ namespace FinancieraSoluciones.Application.Mapping
 
             CreateMap<MovimientoCobranza, MovimientoCobranzaDto>().ReverseMap();
             CreateMap<PendienteCobro, PendienteCobroDto>().ReverseMap();
-            CreateMap<LiquidacionCobranza, LiquidacionCobranzaDto>()
-                .ForMember(d => d.Hora, opt => opt.MapFrom(s => s.Hora ?? string.Empty))
-                .ReverseMap();
         }
     }
 }

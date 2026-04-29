@@ -14,7 +14,6 @@ namespace FinancieraSoluciones.Application.DTOs.Finanzas.Caja
         public decimal? Abono { get; set; }
         public decimal? Mora { get; set; }
         public Guid? CobradorId { get; set; }
-        public Guid? LiquidacionCobranzaId { get; set; }
         public Guid? CorteCajaId { get; set; }
         public bool RecibidoCaja { get; set; }
         public string? EstatusFichaFinanzas { get; set; }

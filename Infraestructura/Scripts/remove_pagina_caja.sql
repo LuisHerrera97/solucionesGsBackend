@@ -1,9 +1,10 @@
 /*
-  Elimina la página "Caja" (/caja) del menú y permisos asociados.
+  Elimina páginas de menú y permisos asociados:
+  - /caja
+  - /cobranza/liquidaciones
+  - /cobranza/gestion-liquidaciones
 
-  --- PostgreSQL (por defecto en este archivo) ---
-  Ejecutar en la base de datos de la aplicación.
-  Orden: permisos_boton → botones → permisos_pagina → paginas
+  PostgreSQL (por defecto en este archivo).
 */
 
 BEGIN;
@@ -11,21 +12,35 @@ BEGIN;
 DELETE FROM permisos_boton AS pb
 USING botones AS b
 WHERE b.id = pb.id_boton
-  AND b.id_pagina IN (SELECT id FROM paginas WHERE ruta = '/caja');
+  AND b.id_pagina IN (
+    SELECT id
+    FROM paginas
+    WHERE ruta IN ('/caja', '/cobranza/liquidaciones', '/cobranza/gestion-liquidaciones')
+  );
 
 DELETE FROM botones
-WHERE id_pagina IN (SELECT id FROM paginas WHERE ruta = '/caja');
+WHERE id_pagina IN (
+  SELECT id
+  FROM paginas
+  WHERE ruta IN ('/caja', '/cobranza/liquidaciones', '/cobranza/gestion-liquidaciones')
+);
 
 DELETE FROM permisos_pagina
-WHERE id_pagina IN (SELECT id FROM paginas WHERE ruta = '/caja');
+WHERE id_pagina IN (
+  SELECT id
+  FROM paginas
+  WHERE ruta IN ('/caja', '/cobranza/liquidaciones', '/cobranza/gestion-liquidaciones')
+);
 
 DELETE FROM paginas
-WHERE ruta = '/caja';
+WHERE ruta IN ('/caja', '/cobranza/liquidaciones', '/cobranza/gestion-liquidaciones');
 
 COMMIT;
 
 -- Mensaje opcional (ejecutar aparte si quieres comprobar antes):
--- SELECT id, nombre, ruta FROM paginas WHERE ruta = '/caja';
+-- SELECT id, nombre, ruta
+-- FROM paginas
+-- WHERE ruta IN ('/caja', '/cobranza/liquidaciones', '/cobranza/gestion-liquidaciones');
 
 
 /*

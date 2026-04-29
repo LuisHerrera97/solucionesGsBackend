@@ -1,7 +1,6 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using FinancieraSoluciones.Domain.Entidades.Cobranza.Liquidaciones;
 using FinancieraSoluciones.Domain.Entidades.General;
 using FinancieraSoluciones.Domain.Entidades.Finanzas;
 using FinancieraSoluciones.Domain.Entidades.Finanzas.Caja;
@@ -37,7 +36,6 @@ namespace FinancieraSoluciones.Infraestructura.Data
         public DbSet<Ficha> Fichas { get; set; }
         public DbSet<MovimientoCaja> MovimientosCaja { get; set; }
         public DbSet<CorteCaja> CortesCaja { get; set; }
-        public DbSet<LiquidacionCobranza> LiquidacionesCobranza { get; set; }
 
         public override int SaveChanges()
         {
@@ -879,9 +877,6 @@ namespace FinancieraSoluciones.Infraestructura.Data
                 entity.Property(e => e.CobradorId)
                     .HasColumnName("cobrador_id");
 
-                entity.Property(e => e.LiquidacionCobranzaId)
-                    .HasColumnName("liquidacion_cobranza_id");
-
                 entity.Property(e => e.RecibidoCaja)
                     .HasColumnName("recibido_caja")
                     .IsRequired()
@@ -955,8 +950,6 @@ namespace FinancieraSoluciones.Infraestructura.Data
 
                 entity.HasIndex(e => e.CobradorId);
 
-                entity.HasIndex(e => e.LiquidacionCobranzaId);
-
                 entity.HasIndex(e => e.ReversaDeId);
 
                 entity.HasIndex(e => e.IdempotencyKey)
@@ -972,63 +965,6 @@ namespace FinancieraSoluciones.Infraestructura.Data
                     .HasForeignKey(d => d.CreditoId)
                     .OnDelete(DeleteBehavior.SetNull);
             });
-
-            modelBuilder.Entity<LiquidacionCobranza>(entity =>
-            {
-                entity.ToTable("liquidaciones_cobranza");
-                entity.HasKey(e => e.Id);
-
-                entity.Property(e => e.Id)
-                    .HasColumnName("id");
-
-                entity.Property(e => e.CobradorId)
-                    .HasColumnName("cobrador_id")
-                    .IsRequired();
-
-                entity.Property(e => e.Fecha)
-                    .HasColumnName("fecha")
-                    .IsRequired();
-
-                entity.Property(e => e.Hora)
-                    .HasColumnName("hora")
-                    .HasMaxLength(10)
-                    .IsRequired(false);
-
-                entity.Property(e => e.TotalEfectivo)
-                    .HasColumnName("total_efectivo")
-                    .IsRequired();
-
-                entity.Property(e => e.TotalTransferencia)
-                    .HasColumnName("total_transferencia")
-                    .IsRequired();
-
-                entity.Property(e => e.Total)
-                    .HasColumnName("total")
-                    .IsRequired();
-
-                entity.Property(e => e.Evidencia)
-                    .HasColumnName("evidencia")
-                    .HasMaxLength(255);
-
-                entity.Property(e => e.Estatus)
-                    .HasColumnName("estatus")
-                    .HasMaxLength(30)
-                    .IsRequired();
-
-                entity.Property(e => e.FechaCreacion)
-                    .HasColumnName("fecha_creacion")
-                    .IsRequired();
-
-                entity.Property(e => e.ConfirmadaPorId)
-                    .HasColumnName("confirmada_por_id");
-
-                entity.Property(e => e.FechaConfirmacion)
-                    .HasColumnName("fecha_confirmacion");
-
-                entity.HasIndex(e => new { e.CobradorId, e.Fecha });
-                entity.HasIndex(e => e.Estatus);
-            });
-
 
             modelBuilder.Entity<AuditoriaEvento>(entity =>
             {

@@ -4,7 +4,6 @@ using FinancieraSoluciones.Domain.Interfaces.Finanzas.Caja;
 using FinancieraSoluciones.Domain.Interfaces.Finanzas.Cortes;
 using FinancieraSoluciones.Domain.Interfaces.Cobranza.Pendientes;
 using FinancieraSoluciones.Domain.Interfaces.Cobranza.Cobranza;
-using FinancieraSoluciones.Domain.Interfaces.Cobranza.Liquidaciones;
 using FinancieraSoluciones.Domain.Interfaces.Seguridad;
 using FinancieraSoluciones.Domain.Interfaces;
 using FinancieraSoluciones.Infraestructura.Repositorios.General;
@@ -13,7 +12,6 @@ using FinancieraSoluciones.Infraestructura.Repositorios.Finanzas.Caja;
 using FinancieraSoluciones.Infraestructura.Repositorios.Finanzas.Cortes;
 using FinancieraSoluciones.Infraestructura.Repositorios.Cobranza.Pendientes;
 using FinancieraSoluciones.Infraestructura.Repositorios.Cobranza.Cobranza;
-using FinancieraSoluciones.Infraestructura.Repositorios.Cobranza.Liquidaciones;
 using FinancieraSoluciones.Infraestructura.Repositorios.Seguridad;
 using FinancieraSoluciones.Infraestructura.Data;
 using FinancieraSoluciones.Infraestructura.Servicios;
@@ -53,7 +51,6 @@ namespace FinancieraSoluciones.Infraestructura.DependencyInjection
             services.AddScoped<ICorteCajaRepositorio, CorteCajaRepositorio>();
             services.AddScoped<IPendientesRepositorio, PendientesRepositorio>();
             services.AddScoped<ICobranzaRepositorio, CobranzaRepositorio>();
-            services.AddScoped<ILiquidacionCobranzaRepositorio, LiquidacionCobranzaRepositorio>();
             services.AddScoped<IClock, SystemClock>();
             services.AddScoped<IUnitOfWork, UnitOfWork>();
 
